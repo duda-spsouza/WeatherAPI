@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html ng-app="prevTempo" lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+    <title>Previsão do Tempo API Weather</title>
+    <!-- Bootstrap 3.3.6 -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.5.0/css/font-awesome.min.css">
+    <link href="css/AdminLTE.min.css" rel="stylesheet" type="text/css" />
+  </head>
+  <body class="hold-transition layout-top-nav">
+    
+    <div class="wrapper" ng-controller="TudoController">
+      <header class="main-header">
+        <nav class="navbar navbar-static-top">
+          <div class="container">
+            <div class="navbar-header">
+              <a href="#" class="navbar-brand"><b>Previsão do Tempo API Weather</a>
+            </div>
+          </div>
+        </nav>
+      </header>
+        <div class="content-wrapper">
+          <div class="container">
+
+            <section class="content">
+
+              <div class="row">
+                <div class="col-md-12">
+                  <div class="box box-default">
+                    <div class="box-header with-border">
+                      <h3 class="box-title">Previsão do tempo</h3>
+                    </div>
+                    <div class="box-body">
+                      <div class="row">
+                        <div class="col-md-5 col-sm-5 col-xs-12">
+                          <div class="form-group">
+                            <label>Estado</label>
+                            <select class="form-control" ng-model="estado" ng-options="st as st.nome for st in estados">
+                            </select>
+                          </div>
+                        </div>
+                        <div class="col-md-5 col-sm-5 col-xs-12">
+                          <div class="form-group">
+                            <label>Cidade</label>
+                            <select class="form-control" ng-model="nomeCidade" ng-options="cidade as cidade for cidade in estado.cidades">
+                              <option></option>
+                            </select>
+                          </div>
+                        </div>
+                        <div class="col-md-1 col-sm-2 col-xs-6">
+                          <button style="margin-top: 1.8em;" type="button" name="button" class="btn btn-primary" ng-click="mostraWeather()">Buscar</button>
+                        </div>
+                        <div class="col-md-1 col-sm-2 col-xs-6">
+                          <input style="margin-top: 1.8em;" type="checkbox" name="favorita" ng-model="cbFavorita"
+                          ng-click="guardaFavorita()" ng-checked="(estado.sigla && estado.sigla == estadoFavorita) && (nomeCidade && nomeCidade == cidadeFavorita)"
+                          ng-disabled="(estado.sigla && estado.sigla == estadoFavorita) && (nomeCidade && nomeCidade == cidadeFavorita)"> Favorito</input>
+                        </div>
+                      </div>
+                      <div ng-if="temFavorita">
+                        <h5>Localidade Favorita: {{cidadeFavorita}}-{{estadoFavorita}} <a href="" ng-click="removeFavorita()" data-toggle="tooltip" title="Remover"><i class="fa fa-times text-danger" ></i></a></h5>
+                      </div>
+
+                      <hr>
+                      <div>
+                        <div ng-repeat="previsao in weatherInfo.previsoes">
+                          <div>
+                            <div class="info-box">
+                                <span class="info-box-icon">
+                                  <img ng-src="http://openweathermap.org/img/w/{{previsao.imagem}}.png" alt="Icon" />
+                                </span>
+                                <div class="info-box-content">
+                                  <span class="info-box-text">{{previsao.data | date: 'EEEE d MMM'}}</span>
+                                  <span class="info-box-text">{{previsao.descricao}}</span>
+                                  <span class="info-box-number">Min.: {{previsao.temperatura_min}}&deg;</span>
+                                  <span class="info-box-number">Máx.: {{previsao.temperatura_max}}&deg;</span>
+                                </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div ng-if="loades" class="overlay" style="margin-top: 14em;">
+                          <i class="fa fa-refresh fa-spin"></i>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Error message -->
+              <div ng-if="messageErro" class="alert alert-danger alert-dismissable">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true" ng-click="fechaErro()">&times;</button>
+                <h4><i class="icon fa fa-ban"></i> Erro!</h4>
+                {{messageErro}}
+              </div>
+            </section>
+            <section ng-if="weatherInfo" class="content box-size">
+              <div class="row">
+                <div class="col-md-4">
+                  <div class="box box-warning">
+                    <div class="box-header with-border">
+                      <h3 class="box-title">Máxima e Mínima</h3>
+                      <div class="box-tools pull-right">
+                        <button class="btn btn-box-tool" data-widget="collapse" ng-init="collapM = false" ng-click="collapM = !collapM">
+                          <i class="fa fa-minus" ng-show="collapM == false"></i>
+                          <i class="fa fa-plus" ng-show="collapM == true"></i>
+                        </button>
+                      </div>
+                    </div>
+                    <div class="box-body box-size" ng-class="{'collapse' : collapM}">
+                      <h4>Máxima</h4>
+                      <span class="info-box-number">{{maxima.temperatura_max}}&deg;</span>
+                      <span class="info-box-text">{{maxima.data | date: 'EEEE, MMMM d, y'}}</span>
+                      <hr>
+                      <h4>Mínima</h4>
+                      <span class="info-box-number">{{minima.temperatura_min}}&deg;</span>
+                      <span class="info-box-text">{{minima.data | date: 'EEEE, MMMM d, y'}}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-md-4">
+                  <div class="box box-danger">
+                    <div class="box-header with-border">
+                      <h3 class="box-title">Recomendação</h3>
+                      <div class="box-tools pull-right">
+                        <button class="btn btn-box-tool" data-widget="collapse" ng-init="collapR = false" ng-click="collapR = !collapR">
+                          <i class="fa fa-minus" ng-show="collapR == false"></i>
+                          <i class="fa fa-plus" ng-show="collapR == true"></i>
+                        </button>
+                      </div>
+                    </div>
+                    <div class="box-body box-size" ng-class="{'collapse' : collapR}">
+
+                      <div ng-if="recomendacao">
+                        <div class="text-aqua">
+                          <h4 align="center"><i class="fa fa-smile-o fa-5x"></i></h4>
+                        </div>
+                        <p align="center"> A praia estará ótima no final de semana. </p>
+                        <span class="info-box-number">Temperatura: {{sunday.temperatura_max}}&deg;</span>
+                        <span class="info-box-number">{{sunday.descricao}} - {{sunday.data | date: 'EEEE d MMM'}}</span>
+                      </div>
+
+                      <div ng-if="!recomendacao">
+                        <div class="text-danger">
+                          <h4 align="center"><i class="fa fa-frown-o fa-5x"></i></h4>
+                        </div>
+                        <p align="center"> A praia pode não ser uma boa opção. </p>
+                        <span class="info-box-number">Temperatura: {{sunday.temperatura_max}}&deg;</span>
+                        <span class="info-box-number">{{sunday.descricao}} - {{sunday.data | date: 'EEEE d MMM'}}</span>
+                      </div>
+
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-md-4">
+                  <div class="box box-info">
+                    <div class="box-header with-border">
+                      <h3 class="box-title">Variação</h3>
+                      <div class="box-tools pull-right">
+                        <button class="btn btn-box-tool" data-widget="collapse" ng-init="collapV = false" ng-click="collapV = !collapV">
+                          <i class="fa fa-minus" ng-show="collapV == false"></i>
+                          <i class="fa fa-plus" ng-show="collapV == true"></i>
+                        </button>
+                      </div>
+                    </div>
+                    <div class="box-body box-size" ng-class="{'collapse' : collapV}">
+                      <div class="chart">
+                        <canvas id="line" class="chart chart-line" chart-data="data"
+                          chart-labels="labels" chart-legend="true" chart-series="series">
+                        </canvas>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+      </div>
+        <footer class="main-footer"></footer>
+    </div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.3/angular.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.1.6/Chart.min.js"> </script>
+    <script src="https://cdn.jsdelivr.net/angular.chartjs/1.0.0/angular-chart.min.js"> </script>
+    <script>var app = angular.module("prevTempo", ['chart.js']);</script>
+    <script src="js/services/cidades.js"> </script>
+    <script src="js/services/blumenau.js"> </script>
+    <script src="js/services/favorito.js"> </script>
+    <script src="js/config/config.js"> </script>
+    <script src="js/controllers/TudoController.js"> </script>
+  </body>
+</html>
